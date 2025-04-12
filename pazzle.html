@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>3x3 ジグソーパズル</title>
+  <style>
+    #puzzle {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 2px;
+      width: 306px;
+      margin: 20px auto;
+    }
+
+    .piece {
+      width: 100px;
+      height: 100px;
+      background-image: url('https://picsum.photos/300');
+      /* 任意の画像URLに変更可 */
+      background-size: 300px 300px;
+      border: 1px solid #999;
+      cursor: grab;
+    }
+  </style>
+
+</head>
+
+
+<body>
+  <h2 style="text-align: center;">3x3 ジグソーパズル</h2>
+  <div id="puzzle">
+    <div></div>
+
+  </div>
+  <p style="text-align: center;"><button onclick="checkWin()">正解をチェック</button></p>
+
+
+
+  <script>
+    const puzzle = document.getElementById('puzzle');
+
+    const order = [...Array(9).keys()]; // [0,1,2,...,8]
+    shuffle(order);
+
+    // ピース作成
+    order.forEach(i => {
+      const piece = document.createElement('div');
+      piece.className = 'piece';
+      piece.draggable = true;
+      piece.dataset.correct = i;
+      piece.dataset.current = i;
+      piece.style.backgroundPosition = `-${(i % 3) * 100}px -${Math.floor(i / 3) * 100}px`;
+      puzzle.appendChild(piece);
+    });
+
+    // ドラッグ＆ドロップ処理
+    let dragged = null;
+
+    puzzle.addEventListener('dragstart', e => {
+      dragged = e.target;
+    });
+
+    puzzle.addEventListener('dragover', e => {
+      e.preventDefault();
+    });
+
+    puzzle.addEventListener('drop', e => {
+      if (e.target.classList.contains('piece') && dragged !== e.target) {
+        // 位置を交換
+        const temp = document.createElement('div');
+        puzzle.replaceChild(temp, dragged);
+        puzzle.replaceChild(dragged, e.target);
+        puzzle.replaceChild(e.target, temp);
+      }
+    });
+
+    function checkWin() {
+      const pieces = [...puzzle.children];
+      const correct = pieces.every((p, i) => Number(p.dataset.correct) === i);
+      alert(correct ? "完成！🎉" : "まだ完成していません");
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+  </script>
+
+</body>
+</html>
