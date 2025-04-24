@@ -1,1 +1,1 @@
-# test-mainpc
+# GIT-test ギットのテスト用のリポジトリ
