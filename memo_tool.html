@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>思考メモツール</title>
+  <style>
+    body { font-family: sans-serif; max-width: 640px; margin: 30px auto; padding: 0 10px; background: #f9f9f9; color: #333; }
+    textarea { width: 100%; box-sizing: border-box; padding: 8px; font-size: 1em; }
+    button { padding: 6px 12px; margin: 4px 2px; font-size: 1em; border: 1px solid #999; border-radius: 4px; background: #f0f0f0; cursor: pointer; }
+    button:hover { background: #e0e0e0; }
+    #display { border: 1px solid #ccc; padding: 10px; margin-top: 20px; background: #fff; border-radius: 4px; }
+    #display button { margin-right: 5px; }
+    #new { margin-bottom: 10px; }
+    #history { margin-top: 10px; }
+    h2 { text-align: center; }
+  </style>
+</head>
+<body>
+  <h2>思いつきを保存するツール</h2>
+  <div id="new">
+    <textarea id="newText" rows="4" placeholder="今思っていること"></textarea><br>
+    <button onclick="saveNew()">保存</button>
+  </div>
+  <p><button onclick="showRandom()">過去の投稿をランダムに表示</button></p>
+
+  <div id="display" style="display:none;">
+    <p id="postText"></p>
+    <p id="postDate"></p>
+    <p>ポイント: <span id="postPoints"></span></p>
+    <button onclick="closeDisplay()">閉じる</button>
+    <button onclick="addPoint()">為になった</button>
+    <button onclick="deletePost()">削除</button>
+    <button onclick="startEdit()">編集</button>
+    <button onclick="toggleHistory()">履歴</button>
+    <div id="history" style="display:none;">
+      <h4>編集履歴</h4>
+      <ul id="historyList"></ul>
+    </div>
+    <div id="editArea" style="display:none;">
+      <textarea id="editText" rows="4"></textarea><br>
+      <button onclick="saveEdit()">保存</button>
+      <button onclick="cancelEdit()">キャンセル</button>
+    </div>
+  </div>
+
+<script>
+  function loadPosts() {
+    return JSON.parse(localStorage.getItem('posts') || '[]');
+  }
+  function savePosts(posts) {
+    localStorage.setItem('posts', JSON.stringify(posts));
+  }
+  function saveNew() {
+    const text = document.getElementById('newText').value.trim();
+    if (!text) return;
+    const posts = loadPosts();
+    posts.push({ id: Date.now(), text: text, date: new Date().toLocaleString(), points: 0, history: [] });
+    savePosts(posts);
+    document.getElementById('newText').value = '';
+    alert('保存しました');
+  }
+  let currentIndex = null;
+  function showRandom() {
+    const posts = loadPosts();
+    if (posts.length === 0) { alert('投稿がありません'); return; }
+    currentIndex = Math.floor(Math.random() * posts.length);
+    const post = posts[currentIndex];
+    document.getElementById('postText').textContent = post.text;
+    document.getElementById('postDate').textContent = post.date;
+    document.getElementById('postPoints').textContent = post.points;
+    document.getElementById('display').style.display = 'block';
+    document.getElementById('history').style.display = 'none';
+    document.getElementById('editArea').style.display = 'none';
+  }
+  function closeDisplay() {
+    document.getElementById('display').style.display = 'none';
+  }
+  function addPoint() {
+    const posts = loadPosts();
+    const post = posts[currentIndex];
+    post.points += 1;
+    document.getElementById('postPoints').textContent = post.points;
+    savePosts(posts);
+  }
+  function deletePost() {
+    const posts = loadPosts();
+    if (currentIndex === null) return;
+    posts.splice(currentIndex, 1);
+    savePosts(posts);
+    closeDisplay();
+  }
+  function startEdit() {
+    const posts = loadPosts();
+    const post = posts[currentIndex];
+    document.getElementById('editText').value = post.text;
+    document.getElementById('editArea').style.display = 'block';
+  }
+  function saveEdit() {
+    const newText = document.getElementById('editText').value.trim();
+    if (!newText) return;
+    const posts = loadPosts();
+    const post = posts[currentIndex];
+    post.history.push({ text: post.text, date: post.date });
+    post.text = newText;
+    post.date = new Date().toLocaleString();
+    document.getElementById('postText').textContent = post.text;
+    document.getElementById('postDate').textContent = post.date;
+    document.getElementById('editArea').style.display = 'none';
+    savePosts(posts);
+  }
+  function cancelEdit() {
+    document.getElementById('editArea').style.display = 'none';
+  }
+  function toggleHistory() {
+    const historyDiv = document.getElementById('history');
+    if (historyDiv.style.display === 'none') {
+      const posts = loadPosts();
+      const post = posts[currentIndex];
+      const list = document.getElementById('historyList');
+      list.innerHTML = '';
+      post.history.forEach(h => {
+        const li = document.createElement('li');
+        li.textContent = `[${h.date}] ${h.text}`;
+        list.appendChild(li);
+      });
+      historyDiv.style.display = 'block';
+    } else {
+      historyDiv.style.display = 'none';
+    }
+  }
+</script>
+</body>
+</html>
